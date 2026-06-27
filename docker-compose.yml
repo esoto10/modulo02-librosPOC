@@ -1,0 +1,27 @@
+# ============================================================
+# docker-compose.yml - Catálogo de Canciones POC
+# Levanta la aplicación Spring Boot en el puerto 8085
+# ============================================================
+
+services:
+  canciones-poc:
+    # Construye la imagen desde el Dockerfile en el directorio actual
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: canciones-poc
+    ports:
+      # host:contenedor → acceder desde http://localhost:8085
+      - "8085:8085"
+    environment:
+      # Variables de entorno (sobreescriben application.properties si se necesita)
+      - SPRING_PROFILES_ACTIVE=default
+      - SERVER_PORT=8085
+    # Reiniciar el contenedor si falla inesperadamente
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/graphql || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

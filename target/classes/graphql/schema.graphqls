@@ -1,0 +1,130 @@
+# ============================================================
+# Schema GraphQL - Catálogo de Canciones
+# Archivo: src/main/resources/graphql/schema.graphqls
+# ============================================================
+
+# ------------------------------------------------------------
+# TIPOS DE CONSULTA (Queries)
+# Operaciones de solo lectura
+# ------------------------------------------------------------
+type Query {
+    "Obtiene todas las canciones del catálogo"
+    canciones: [Cancion!]!
+
+    "Obtiene una canción por su ID"
+    cancion(id: ID!): Cancion
+
+    "Obtiene todos los artistas"
+    artistas: [Artista!]!
+
+    "Obtiene un artista por su ID"
+    artista(id: ID!): Artista
+
+    "Obtiene todos los álbumes"
+    albumes: [Album!]!
+
+    "Obtiene un álbum por su ID"
+    album(id: ID!): Album
+
+    "Obtiene todos los géneros musicales"
+    generos: [Genero!]!
+}
+
+# ------------------------------------------------------------
+# TIPOS DE MUTACIÓN (Mutations)
+# Operaciones que modifican datos
+# ------------------------------------------------------------
+type Mutation {
+    "Agrega una nueva canción al catálogo"
+    agregarCancion(input: CancionInput!): Cancion!
+
+    "Elimina una canción por su ID. Retorna true si fue eliminada"
+    eliminarCancion(id: ID!): Boolean!
+
+    "Agrega un nuevo artista"
+    agregarArtista(input: ArtistaInput!): Artista!
+
+    "Agrega un nuevo álbum asociado a un artista"
+    agregarAlbum(input: AlbumInput!): Album!
+}
+
+# ------------------------------------------------------------
+# TIPOS DE DATOS (Types)
+# Corresponden a las entidades del dominio
+# ------------------------------------------------------------
+
+"Representa una canción del catálogo"
+type Cancion {
+    id: ID!
+    titulo: String!
+    "Duración de la canción en segundos"
+    duracion: Int!
+    "Año de lanzamiento"
+    anio: Int!
+    artista: Artista!
+    "Álbum al que pertenece (puede ser nulo)"
+    album: Album
+    generos: [Genero!]!
+}
+
+"Representa un artista o grupo musical"
+type Artista {
+    id: ID!
+    nombre: String!
+    nacionalidad: String!
+    albumes: [Album!]!
+    canciones: [Cancion!]!
+}
+
+"Representa un álbum musical"
+type Album {
+    id: ID!
+    titulo: String!
+    "Año de lanzamiento del álbum"
+    anio: Int!
+    artista: Artista!
+    canciones: [Cancion!]!
+}
+
+"Representa un género musical"
+type Genero {
+    id: ID!
+    nombre: String!
+    canciones: [Cancion!]!
+}
+
+# ------------------------------------------------------------
+# TIPOS DE ENTRADA (Input Types)
+# Se usan como parámetros en las Mutations.
+# Mapeados a Java Records en la capa de controlador.
+# ------------------------------------------------------------
+
+"Datos de entrada para crear una nueva Canción"
+input CancionInput {
+    titulo: String!
+    "Duración en segundos"
+    duracion: Int!
+    "Año de lanzamiento"
+    anio: Int!
+    "ID del artista (obligatorio)"
+    artistaId: ID!
+    "ID del álbum (opcional)"
+    albumId: ID
+    "Lista de IDs de géneros (opcional)"
+    generoIds: [ID!]
+}
+
+"Datos de entrada para crear un nuevo Artista"
+input ArtistaInput {
+    nombre: String!
+    nacionalidad: String!
+}
+
+"Datos de entrada para crear un nuevo Álbum"
+input AlbumInput {
+    titulo: String!
+    "Año de lanzamiento"
+    anio: Int!
+    "ID del artista al que pertenece el álbum"
+    artistaId: ID!
+}
