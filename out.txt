@@ -1,0 +1,554 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------------< com.libros:libros-poc >------------------------
+[INFO] Building libros-poc 0.0.1-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot-maven-plugin:3.3.1:run (default-cli) > test-compile @ libros-poc >>>
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ libros-poc ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.13.0:compile (default-compile) @ libros-poc ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 44 source files with javac [debug parameters release 21] to target\classes
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ libros-poc ---
+[INFO] skip non existing resourceDirectory D:\cursos\diplomado arquitectura\modulo02\canciones-poc\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.13.0:testCompile (default-testCompile) @ libros-poc ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] <<< spring-boot-maven-plugin:3.3.1:run (default-cli) < test-compile @ libros-poc <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot-maven-plugin:3.3.1:run (default-cli) @ libros-poc ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.1)
+
+2026-06-26T22:18:39.795-05:00  INFO 22436 --- [libros-poc] [           main] com.libros.LibrosPocApplication          : Starting LibrosPocApplication using Java 21.0.4 with PID 22436 (D:\cursos\diplomado arquitectura\modulo02\canciones-poc\target\classes started by B36559 in D:\cursos\diplomado arquitectura\modulo02\canciones-poc)
+2026-06-26T22:18:39.799-05:00  INFO 22436 --- [libros-poc] [           main] com.libros.LibrosPocApplication          : No active profile set, falling back to 1 default profile: "default"
+2026-06-26T22:18:40.749-05:00  INFO 22436 --- [libros-poc] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-26T22:18:41.051-05:00  INFO 22436 --- [libros-poc] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 288 ms. Found 4 JPA repository interfaces.
+2026-06-26T22:18:42.717-05:00  INFO 22436 --- [libros-poc] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8085 (http)
+2026-06-26T22:18:42.749-05:00  INFO 22436 --- [libros-poc] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-06-26T22:18:42.750-05:00  INFO 22436 --- [libros-poc] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.25]
+2026-06-26T22:18:42.923-05:00  INFO 22436 --- [libros-poc] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-06-26T22:18:42.926-05:00  INFO 22436 --- [libros-poc] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3064 ms
+2026-06-26T22:18:42.969-05:00  INFO 22436 --- [libros-poc] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-06-26T22:18:43.312-05:00  INFO 22436 --- [libros-poc] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:librosdb user=SA
+2026-06-26T22:18:43.314-05:00  INFO 22436 --- [libros-poc] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-06-26T22:18:43.332-05:00  INFO 22436 --- [libros-poc] [           main] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:h2:mem:librosdb'
+2026-06-26T22:18:43.598-05:00  INFO 22436 --- [libros-poc] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-26T22:18:43.760-05:00  INFO 22436 --- [libros-poc] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.2.Final
+2026-06-26T22:18:43.855-05:00  INFO 22436 --- [libros-poc] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-06-26T22:18:44.431-05:00  INFO 22436 --- [libros-poc] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-06-26T22:18:44.510-05:00  WARN 22436 --- [libros-poc] [           main] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-06-26T22:18:46.462-05:00  INFO 22436 --- [libros-poc] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    drop table if exists autores cascade 
+Hibernate: 
+    drop table if exists categorias cascade 
+Hibernate: 
+    drop table if exists colecciones cascade 
+Hibernate: 
+    drop table if exists libro_categoria cascade 
+Hibernate: 
+    drop table if exists libros cascade 
+Hibernate: 
+    create table autores (
+        id bigint generated by default as identity,
+        nacionalidad varchar(255) not null,
+        nombre varchar(255) not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table categorias (
+        id bigint generated by default as identity,
+        nombre varchar(255) not null unique,
+        primary key (id)
+    )
+Hibernate: 
+    create table colecciones (
+        anio integer not null,
+        autor_id bigint not null,
+        id bigint generated by default as identity,
+        titulo varchar(255) not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table libro_categoria (
+        categoria_id bigint not null,
+        libro_id bigint not null
+    )
+Hibernate: 
+    create table libros (
+        anio integer not null,
+        paginas integer not null,
+        autor_id bigint not null,
+        coleccion_id bigint,
+        id bigint generated by default as identity,
+        titulo varchar(255) not null,
+        primary key (id)
+    )
+Hibernate: 
+    alter table if exists colecciones 
+       add constraint FKtfc832lg537mmalauhsg099pu 
+       foreign key (autor_id) 
+       references autores
+Hibernate: 
+    alter table if exists libro_categoria 
+       add constraint FKdjdoftwck1cc6la8bh0inyesf 
+       foreign key (categoria_id) 
+       references categorias
+Hibernate: 
+    alter table if exists libro_categoria 
+       add constraint FKnv6osr3junvbgddofhwrwt0o9 
+       foreign key (libro_id) 
+       references libros
+Hibernate: 
+    alter table if exists libros 
+       add constraint FKspm6r4x8iif19d9gjsrvwev65 
+       foreign key (autor_id) 
+       references autores
+Hibernate: 
+    alter table if exists libros 
+       add constraint FKag1rd39hf47kwr0hfylpccxy3 
+       foreign key (coleccion_id) 
+       references colecciones
+2026-06-26T22:18:46.567-05:00  INFO 22436 --- [libros-poc] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-26T22:18:47.445-05:00  INFO 22436 --- [libros-poc] [           main] efaultSchemaResourceGraphQlSourceBuilder : Loaded 1 resource(s) in the GraphQL schema.
+2026-06-26T22:18:47.662-05:00  INFO 22436 --- [libros-poc] [           main] o.s.b.a.g.GraphQlAutoConfiguration       : GraphQL schema inspection:
+	Unmapped fields: {}
+	Unmapped registrations: {}
+	Unmapped arguments: {}
+	Skipped types: []
+2026-06-26T22:18:47.697-05:00  INFO 22436 --- [libros-poc] [           main] s.b.a.g.s.GraphQlWebMvcAutoConfiguration : GraphQL endpoint HTTP POST /graphql
+2026-06-26T22:18:47.941-05:00  INFO 22436 --- [libros-poc] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8085 (http) with context path '/'
+2026-06-26T22:18:47.950-05:00  INFO 22436 --- [libros-poc] [           main] com.libros.LibrosPocApplication          : Started LibrosPocApplication in 8.682 seconds (process running for 9.384)
+2026-06-26T22:18:47.964-05:00  INFO 22436 --- [libros-poc] [           main] com.libros.DataInitializer               : === Cargando datos de prueba: Catálogo de Libros ===
+Hibernate: 
+    insert 
+    into
+        categorias
+        (nombre, id) 
+    values
+        (?, default)
+Hibernate: 
+    insert 
+    into
+        categorias
+        (nombre, id) 
+    values
+        (?, default)
+Hibernate: 
+    insert 
+    into
+        categorias
+        (nombre, id) 
+    values
+        (?, default)
+Hibernate: 
+    insert 
+    into
+        categorias
+        (nombre, id) 
+    values
+        (?, default)
+Hibernate: 
+    insert 
+    into
+        categorias
+        (nombre, id) 
+    values
+        (?, default)
+Hibernate: 
+    insert 
+    into
+        autores
+        (nacionalidad, nombre, id) 
+    values
+        (?, ?, default)
+Hibernate: 
+    insert 
+    into
+        autores
+        (nacionalidad, nombre, id) 
+    values
+        (?, ?, default)
+Hibernate: 
+    insert 
+    into
+        autores
+        (nacionalidad, nombre, id) 
+    values
+        (?, ?, default)
+Hibernate: 
+    insert 
+    into
+        autores
+        (nacionalidad, nombre, id) 
+    values
+        (?, ?, default)
+Hibernate: 
+    insert 
+    into
+        autores
+        (nacionalidad, nombre, id) 
+    values
+        (?, ?, default)
+Hibernate: 
+    insert 
+    into
+        colecciones
+        (anio, autor_id, titulo, id) 
+    values
+        (?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        colecciones
+        (anio, autor_id, titulo, id) 
+    values
+        (?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        colecciones
+        (anio, autor_id, titulo, id) 
+    values
+        (?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        colecciones
+        (anio, autor_id, titulo, id) 
+    values
+        (?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        colecciones
+        (anio, autor_id, titulo, id) 
+    values
+        (?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        libros
+        (anio, autor_id, coleccion_id, paginas, titulo, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+2026-06-26T22:18:48.348-05:00  INFO 22436 --- [libros-poc] [nio-8085-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-06-26T22:18:48.349-05:00  INFO 22436 --- [libros-poc] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-06-26T22:18:48.350-05:00  INFO 22436 --- [libros-poc] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        libro_categoria
+        (libro_id, categoria_id) 
+    values
+        (?, ?)
+Hibernate: 
+    select
+        count(*) 
+    from
+        libros l1_0
+2026-06-26T22:18:48.480-05:00  INFO 22436 --- [libros-poc] [           main] com.libros.DataInitializer               : ✔ 15 libros cargados. GraphiQL: http://localhost:8085/graphiql
+Hibernate: 
+    select
+        a1_0.id,
+        a1_0.nacionalidad,
+        a1_0.nombre 
+    from
+        autores a1_0
+[

@@ -1,5 +1,5 @@
 # ============================================================
-# Schema GraphQL - Catálogo de Canciones
+# Schema GraphQL - Catálogo de Libros (Biblioteca)
 # Archivo: src/main/resources/graphql/schema.graphqls
 # ============================================================
 
@@ -8,26 +8,26 @@
 # Operaciones de solo lectura
 # ------------------------------------------------------------
 type Query {
-    "Obtiene todas las canciones del catálogo"
-    canciones: [Cancion!]!
+    "Obtiene todos los libros del catálogo"
+    libros: [Libro!]!
 
-    "Obtiene una canción por su ID"
-    cancion(id: ID!): Cancion
+    "Obtiene un libro por su ID"
+    libro(id: ID!): Libro
 
-    "Obtiene todos los artistas"
-    artistas: [Artista!]!
+    "Obtiene todos los autores"
+    autores: [Autor!]!
 
-    "Obtiene un artista por su ID"
-    artista(id: ID!): Artista
+    "Obtiene un autor por su ID"
+    autor(id: ID!): Autor
 
-    "Obtiene todos los álbumes"
-    albumes: [Album!]!
+    "Obtiene todas las colecciones/sagas"
+    colecciones: [Coleccion!]!
 
-    "Obtiene un álbum por su ID"
-    album(id: ID!): Album
+    "Obtiene una colección por su ID"
+    coleccion(id: ID!): Coleccion
 
-    "Obtiene todos los géneros musicales"
-    generos: [Genero!]!
+    "Obtiene todas las categorías literarias"
+    categorias: [Categoria!]!
 }
 
 # ------------------------------------------------------------
@@ -35,17 +35,17 @@ type Query {
 # Operaciones que modifican datos
 # ------------------------------------------------------------
 type Mutation {
-    "Agrega una nueva canción al catálogo"
-    agregarCancion(input: CancionInput!): Cancion!
+    "Agrega un nuevo libro al catálogo"
+    agregarLibro(input: LibroInput!): Libro!
 
-    "Elimina una canción por su ID. Retorna true si fue eliminada"
-    eliminarCancion(id: ID!): Boolean!
+    "Elimina un libro por su ID. Retorna true si fue eliminado"
+    eliminarLibro(id: ID!): Boolean!
 
-    "Agrega un nuevo artista"
-    agregarArtista(input: ArtistaInput!): Artista!
+    "Agrega un nuevo autor"
+    agregarAutor(input: AutorInput!): Autor!
 
-    "Agrega un nuevo álbum asociado a un artista"
-    agregarAlbum(input: AlbumInput!): Album!
+    "Agrega una nueva colección/saga literaria"
+    agregarColeccion(input: ColeccionInput!): Coleccion!
 }
 
 # ------------------------------------------------------------
@@ -53,44 +53,44 @@ type Mutation {
 # Corresponden a las entidades del dominio
 # ------------------------------------------------------------
 
-"Representa una canción del catálogo"
-type Cancion {
+"Representa un libro del catálogo bibliográfico"
+type Libro {
     id: ID!
     titulo: String!
-    "Duración de la canción en segundos"
-    duracion: Int!
-    "Año de lanzamiento"
+    "Número de páginas del libro"
+    paginas: Int!
+    "Año de publicación"
     anio: Int!
-    artista: Artista!
-    "Álbum al que pertenece (puede ser nulo)"
-    album: Album
-    generos: [Genero!]!
+    autor: Autor!
+    "Colección/saga a la que pertenece (puede ser nula)"
+    coleccion: Coleccion
+    categorias: [Categoria!]!
 }
 
-"Representa un artista o grupo musical"
-type Artista {
+"Representa un autor literario"
+type Autor {
     id: ID!
     nombre: String!
     nacionalidad: String!
-    albumes: [Album!]!
-    canciones: [Cancion!]!
+    colecciones: [Coleccion!]!
+    libros: [Libro!]!
 }
 
-"Representa un álbum musical"
-type Album {
+"Representa una colección o saga literaria"
+type Coleccion {
     id: ID!
     titulo: String!
-    "Año de lanzamiento del álbum"
+    "Año de inicio de la colección"
     anio: Int!
-    artista: Artista!
-    canciones: [Cancion!]!
+    autor: Autor!
+    libros: [Libro!]!
 }
 
-"Representa un género musical"
-type Genero {
+"Representa una categoría literaria (ej: Fantasía, Terror, Romance)"
+type Categoria {
     id: ID!
     nombre: String!
-    canciones: [Cancion!]!
+    libros: [Libro!]!
 }
 
 # ------------------------------------------------------------
@@ -99,32 +99,33 @@ type Genero {
 # Mapeados a Java Records en la capa de controlador.
 # ------------------------------------------------------------
 
-"Datos de entrada para crear una nueva Canción"
-input CancionInput {
+"Datos de entrada para crear un nuevo Libro"
+input LibroInput {
     titulo: String!
-    "Duración en segundos"
-    duracion: Int!
-    "Año de lanzamiento"
+    "Número de páginas"
+    paginas: Int!
+    "Año de publicación"
     anio: Int!
-    "ID del artista (obligatorio)"
-    artistaId: ID!
-    "ID del álbum (opcional)"
-    albumId: ID
-    "Lista de IDs de géneros (opcional)"
-    generoIds: [ID!]
+    "ID del autor principal (obligatorio)"
+    autorId: ID!
+    "ID de la colección/saga (opcional)"
+    coleccionId: ID
+    "Lista de IDs de categorías (opcional)"
+    categoriaIds: [ID!]
 }
 
-"Datos de entrada para crear un nuevo Artista"
-input ArtistaInput {
+"Datos de entrada para crear un nuevo Autor"
+input AutorInput {
     nombre: String!
     nacionalidad: String!
 }
 
-"Datos de entrada para crear un nuevo Álbum"
-input AlbumInput {
+"Datos de entrada para crear una nueva Colección"
+input ColeccionInput {
     titulo: String!
-    "Año de lanzamiento"
+    "Año de inicio de la colección"
     anio: Int!
-    "ID del artista al que pertenece el álbum"
-    artistaId: ID!
+    "ID del autor al que pertenece la colección"
+    autorId: ID!
 }
+

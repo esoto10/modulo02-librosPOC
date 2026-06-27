@@ -1,6 +1,397 @@
-# 🎵 Catálogo de Canciones — POC
+# 📚 Catálogo de Libros — POC
 
-API GraphQL para la gestión de un catálogo musical. Proyecto de prueba de concepto (POC) que demuestra la integración de **Spring Boot 3**, **Spring GraphQL**, **Spring Data JPA** y **H2 en memoria**.
+API GraphQL para la gestión de un catálogo bibliográfico. Proyecto de prueba de concepto (POC) que demuestra la integración de **Spring Boot 3**, **Spring GraphQL**, **Spring Data JPA** y **H2 en memoria**.
+
+---
+
+## Stack Tecnológico
+
+| Tecnología          | Versión | Rol                                         |
+|---------------------|---------|---------------------------------------------|
+| **Java**            | 21      | Lenguaje (Records, Pattern Matching)        |
+| **Spring Boot**     | 3.3.x   | Framework principal y auto-configuración    |
+| **Spring GraphQL**  | 1.3.x   | Exposición de la API GraphQL vía HTTP       |
+| **Spring Data JPA** | 3.x     | Abstracción del acceso a datos              |
+| **Hibernate**       | 6.x     | ORM — implementación JPA                    |
+| **H2 Database**     | 2.x     | Base de datos relacional en memoria         |
+| **Maven**           | 3.x     | Gestor de dependencias y build              |
+
+---
+
+## Arquitectura de Capas
+
+```
+┌───────────────────────────────────────────────────┐
+│         Cliente (Navegador / GraphiQL / curl)      │
+└──────────────────────┬────────────────────────────┘
+                       │  HTTP POST /graphql
+                       ▼
+┌───────────────────────────────────────────────────┐
+│              Capa de Presentación                  │
+│  BibliotecaController (@Controller)                │
+│  @QueryMapping / @MutationMapping                  │
+└──────────────────────┬────────────────────────────┘
+                       │
+                       ▼
+┌───────────────────────────────────────────────────┐
+│              Capa de Negocio                       │
+│  BibliotecaService (@Service)                      │
+│  Lógica de dominio y validaciones                  │
+└──────────────────────┬────────────────────────────┘
+                       │
+                       ▼
+┌───────────────────────────────────────────────────┐
+│              Capa de Acceso a Datos                │
+│  LibroRepository / AutorRepository                 │
+│  ColeccionRepository / CategoriaRepository         │
+│  (Spring Data JPA — JpaRepository)                 │
+└──────────────────────┬────────────────────────────┘
+                       │
+                       ▼
+┌───────────────────────────────────────────────────┐
+│         H2 Database (en memoria)                   │
+│  jdbc:h2:mem:librosdb                              │
+│  Tablas: libros, autores, colecciones, categorias  │
+│          libro_categoria (join table)              │
+└───────────────────────────────────────────────────┘
+```
+
+---
+
+## Diagrama de Componentes
+
+```mermaid
+graph TD
+    A[Cliente / GraphiQL] -->|HTTP POST /graphql| B[BibliotecaController]
+    B --> C[BibliotecaService]
+    C --> D[LibroRepository]
+    C --> E[AutorRepository]
+    C --> F[ColeccionRepository]
+    C --> G[CategoriaRepository]
+    D --> H[(H2 — librosdb)]
+    E --> H
+    F --> H
+    G --> H
+    I[DataInitializer] -->|@ApplicationRunner| C
+```
+
+---
+
+## Modelo Entidad-Relación
+
+```mermaid
+erDiagram
+    AUTORES {
+        BIGINT id PK
+        VARCHAR nombre
+        VARCHAR nacionalidad
+    }
+    COLECCIONES {
+        BIGINT id PK
+        VARCHAR titulo
+        INT anio
+        BIGINT autor_id FK
+    }
+    LIBROS {
+        BIGINT id PK
+        VARCHAR titulo
+        INT paginas
+        INT anio
+        BIGINT autor_id FK
+        BIGINT coleccion_id FK
+    }
+    CATEGORIAS {
+        BIGINT id PK
+        VARCHAR nombre
+    }
+    LIBRO_CATEGORIA {
+        BIGINT libro_id FK
+        BIGINT categoria_id FK
+    }
+
+    AUTORES      ||--o{ COLECCIONES    : "publica"
+    AUTORES      ||--o{ LIBROS         : "escribe"
+    COLECCIONES  ||--o{ LIBROS         : "contiene"
+    LIBROS       }o--o{ CATEGORIAS     : "clasificado en"
+```
+
+---
+
+## Datos de Prueba
+
+Al iniciar la aplicación, `DataInitializer` carga automáticamente:
+
+| Entidad     | Cantidad | Ejemplos                                                    |
+|-------------|----------|-------------------------------------------------------------|
+| Categorías  | 5        | Realismo Mágico, Fantasía, Terror, Romance, Aventura        |
+| Autores     | 5        | García Márquez, J.K. Rowling, Tolkien, Allende, Stephen King |
+| Colecciones | 5        | Harry Potter, El Señor de los Anillos, La Torre Oscura...   |
+| Libros      | 15       | 3 libros por autor                                          |
+
+---
+
+## Endpoints
+
+| Endpoint          | Método | Descripción                              |
+|-------------------|--------|------------------------------------------|
+| `/graphql`        | POST   | Endpoint principal de la API GraphQL     |
+| `/graphiql`       | GET    | Playground interactivo GraphQL (UI)      |
+| `/h2-console`     | GET    | Consola web H2 (base de datos)           |
+
+**Puerto:** `8085`
+
+---
+
+## Cómo Ejecutar
+
+### Con Maven
+
+```bash
+# Compilar y ejecutar
+mvn spring-boot:run
+
+# Ejecutar los tests
+mvn test
+```
+
+La aplicación iniciará en `http://localhost:8085`
+
+### Con Docker
+
+```bash
+# Construir la imagen
+docker build -t libros-poc .
+
+# Ejecutar el contenedor
+docker run -p 8085:8085 libros-poc
+```
+
+### Con Docker Compose
+
+```bash
+docker-compose up --build
+```
+
+---
+
+## Ejemplos de Operaciones GraphQL
+
+Abre **GraphiQL** en `http://localhost:8085/graphiql` y prueba las siguientes operaciones:
+
+### Queries
+
+**Consultar todos los libros**
+```graphql
+query {
+  libros {
+    id
+    titulo
+    paginas
+    anio
+    autor {
+      nombre
+      nacionalidad
+    }
+    coleccion {
+      titulo
+    }
+    categorias {
+      nombre
+    }
+  }
+}
+```
+
+**Buscar un libro por ID**
+```graphql
+query {
+  libro(id: 1) {
+    titulo
+    paginas
+    anio
+    autor { nombre }
+    categorias { nombre }
+  }
+}
+```
+
+**Consultar todos los autores con sus libros**
+```graphql
+query {
+  autores {
+    id
+    nombre
+    nacionalidad
+    libros {
+      titulo
+      paginas
+    }
+    colecciones {
+      titulo
+      anio
+    }
+  }
+}
+```
+
+**Consultar todas las colecciones**
+```graphql
+query {
+  colecciones {
+    id
+    titulo
+    anio
+    autor { nombre }
+    libros { titulo }
+  }
+}
+```
+
+**Consultar categorías con sus libros**
+```graphql
+query {
+  categorias {
+    nombre
+    libros {
+      titulo
+      anio
+    }
+  }
+}
+```
+
+### Mutations
+
+**Agregar un nuevo libro**
+```graphql
+mutation {
+  agregarLibro(input: {
+    titulo: "El Otoño del Patriarca"
+    paginas: 317
+    anio: 1975
+    autorId: "1"
+    coleccionId: "1"
+    categoriaIds: ["1"]
+  }) {
+    id
+    titulo
+    paginas
+    anio
+    autor { nombre }
+    coleccion { titulo }
+    categorias { nombre }
+  }
+}
+```
+
+**Agregar un nuevo autor**
+```graphql
+mutation {
+  agregarAutor(input: {
+    nombre: "Jorge Luis Borges"
+    nacionalidad: "Argentina"
+  }) {
+    id
+    nombre
+    nacionalidad
+  }
+}
+```
+
+**Agregar una nueva colección**
+```graphql
+mutation {
+  agregarColeccion(input: {
+    titulo: "Ficciones"
+    anio: 1944
+    autorId: "6"
+  }) {
+    id
+    titulo
+    anio
+    autor { nombre }
+  }
+}
+```
+
+**Eliminar un libro**
+```graphql
+mutation {
+  eliminarLibro(id: 1)
+}
+```
+
+---
+
+## Estructura del Proyecto
+
+```
+src/
+├── main/
+│   ├── java/com/canciones/
+│   │   ├── LibrosPocApplication.java       ← Clase principal (@SpringBootApplication)
+│   │   ├── DataInitializer.java            ← Carga datos al iniciar
+│   │   ├── model/
+│   │   │   ├── Libro.java                  ← Entidad JPA Libro
+│   │   │   ├── Autor.java                  ← Entidad JPA Autor
+│   │   │   ├── Coleccion.java              ← Entidad JPA Colección/Saga
+│   │   │   └── Categoria.java             ← Entidad JPA Categoría
+│   │   ├── repository/
+│   │   │   ├── LibroRepository.java        ← Spring Data JPA
+│   │   │   ├── AutorRepository.java
+│   │   │   ├── ColeccionRepository.java
+│   │   │   └── CategoriaRepository.java
+│   │   ├── dto/
+│   │   │   ├── LibroInput.java             ← Java 21 Record
+│   │   │   ├── AutorInput.java
+│   │   │   └── ColeccionInput.java
+│   │   ├── service/
+│   │   │   └── BibliotecaService.java      ← Lógica de negocio
+│   │   └── controller/
+│   │       └── BibliotecaController.java   ← Resolvers GraphQL
+│   └── resources/
+│       ├── graphql/
+│       │   └── schema.graphqls             ← Schema GraphQL
+│       └── application.properties          ← Configuración
+├── Dockerfile
+└── docker-compose.yml
+```
+
+---
+
+## Acceso a la Consola H2
+
+1. Abre `http://localhost:8085/h2-console`
+2. Usa los siguientes datos de conexión:
+   - **JDBC URL:** `jdbc:h2:mem:librosdb`
+   - **Usuario:** `sa`
+   - **Contraseña:** *(vacía)*
+
+---
+
+## Diagrama de Flujo — Query `libros`
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant GQL as Spring GraphQL
+    participant CTRL as BibliotecaController
+    participant SVC as BibliotecaService
+    participant REPO as LibroRepository
+    participant DB as H2 Database
+
+    C->>GQL: POST /graphql { query { libros { ... } } }
+    GQL->>CTRL: libros()
+    CTRL->>SVC: obtenerLibros()
+    SVC->>REPO: findAll()
+    REPO->>DB: SELECT * FROM libros
+    DB-->>REPO: List<Libro>
+    REPO-->>SVC: List<Libro>
+    SVC-->>CTRL: List<Libro>
+    CTRL-->>GQL: List<Libro>
+    GQL-->>C: JSON { data: { libros: [...] } }
+```
+
 
 ---
 
