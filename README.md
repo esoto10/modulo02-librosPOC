@@ -72,7 +72,7 @@ graph TD
     E --> H
     F --> H
     G --> H
-    I[DataInitializer] -->|@ApplicationRunner| C
+    I[DataInitializer] -- "@ApplicationRunner" --> C
 ```
 
 ---
