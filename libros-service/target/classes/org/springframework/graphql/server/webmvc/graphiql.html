@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>GraphiQL — Libros POC</title>
+  <style>
+    body { height: 100%; margin: 0; width: 100%; overflow: hidden; }
+    #graphiql { height: 100vh; }
+  </style>
+  <script src="/vendor/react.min.js"></script>
+  <script src="/vendor/react-dom.min.js"></script>
+  <script src="/vendor/graphiql.min.js"></script>
+  <link rel="stylesheet" href="/vendor/graphiql.min.css" />
+  <script src="/vendor/explorer.umd.js"></script>
+  <link rel="stylesheet" href="/vendor/explorer.css" />
+</head>
+<body>
+<div id="graphiql">Loading...</div>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const path = params.get('path') || '/graphql';
+  const url = `${location.protocol}//${location.host}${path}`;
+  const wsPath = params.get('wsPath') || '/graphql';
+  const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const subscriptionUrl = `${wsProtocol}//${location.host}${wsPath}`;
+
+  const fetcher = GraphiQL.createFetcher({ url, subscriptionUrl });
+  const explorerPlugin = GraphiQLPluginExplorer.explorerPlugin();
+
+  const root = ReactDOM.createRoot(document.getElementById('graphiql'));
+  root.render(
+    React.createElement(GraphiQL, {
+      fetcher,
+      defaultVariableEditorOpen: true,
+      headerEditorEnabled: true,
+      shouldPersistHeaders: true,
+      plugins: [explorerPlugin],
+    })
+  );
+</script>
+</body>
+</html>

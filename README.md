@@ -1,199 +1,439 @@
-# 📚 Catálogo de Libros — POC
+# 📚 Libros POC — Catálogo de Libros con GraphQL
 
-API GraphQL para la gestión de un catálogo bibliográfico. Proyecto de prueba de concepto (POC) que demuestra la integración de **Spring Boot 3**, **Spring GraphQL**, **Spring Data JPA** y **H2 en memoria**.
-
----
-
-## Stack Tecnológico
-
-| Tecnología          | Versión | Rol                                         |
-|---------------------|---------|---------------------------------------------|
-| **Java**            | 21      | Lenguaje (Records, Pattern Matching)        |
-| **Spring Boot**     | 3.3.x   | Framework principal y auto-configuración    |
-| **Spring GraphQL**  | 1.3.x   | Exposición de la API GraphQL vía HTTP       |
-| **Spring Data JPA** | 3.x     | Abstracción del acceso a datos              |
-| **Hibernate**       | 6.x     | ORM — implementación JPA                    |
-| **H2 Database**     | 2.x     | Base de datos relacional en memoria         |
-| **Maven**           | 3.x     | Gestor de dependencias y build              |
+POC (**Proof of Concept**) que demuestra una arquitectura fullstack moderna basada en **GraphQL** como contrato de comunicación entre capas. El sistema implementa un catálogo bibliográfico con operaciones de consulta y mutación, cubriendo las ventajas clave de GraphQL frente a REST en un caso de uso real.
 
 ---
 
-## Arquitectura de Capas
-
-```
-┌───────────────────────────────────────────────────┐
-│         Cliente (Navegador / GraphiQL / curl)      │
-└──────────────────────┬────────────────────────────┘
-                       │  HTTP POST /graphql
-                       ▼
-┌───────────────────────────────────────────────────┐
-│              Capa de Presentación                  │
-│  BibliotecaController (@Controller)                │
-│  @QueryMapping / @MutationMapping                  │
-└──────────────────────┬────────────────────────────┘
-                       │
-                       ▼
-┌───────────────────────────────────────────────────┐
-│              Capa de Negocio                       │
-│  BibliotecaService (@Service)                      │
-│  Lógica de dominio y validaciones                  │
-└──────────────────────┬────────────────────────────┘
-                       │
-                       ▼
-┌───────────────────────────────────────────────────┐
-│              Capa de Acceso a Datos                │
-│  LibroRepository / AutorRepository                 │
-│  ColeccionRepository / CategoriaRepository         │
-│  (Spring Data JPA — JpaRepository)                 │
-└──────────────────────┬────────────────────────────┘
-                       │
-                       ▼
-┌───────────────────────────────────────────────────┐
-│         H2 Database (en memoria)                   │
-│  jdbc:h2:mem:librosdb                              │
-│  Tablas: libros, autores, colecciones, categorias  │
-│          libro_categoria (join table)              │
-└───────────────────────────────────────────────────┘
-```
-
----
-
-## Diagrama de Componentes
+## 🏛️ Diagrama de Arquitectura
 
 ```mermaid
-graph TD
-    A[Cliente / GraphiQL] -->|HTTP POST /graphql| B[BibliotecaController]
-    B --> C[BibliotecaService]
-    C --> D[LibroRepository]
-    C --> E[AutorRepository]
-    C --> F[ColeccionRepository]
-    C --> G[CategoriaRepository]
-    D --> H[(H2 — librosdb)]
-    E --> H
-    F --> H
-    G --> H
-    I[DataInitializer] -- "@ApplicationRunner" --> C
+graph TB
+    subgraph Frontend ["🖥️ Frontend — libros-ui (puerto 3000)"]
+        UI["React 18 + React Router"]
+        AC["Apollo Client 3.9"]
+        Q["Queries & Mutations\n/src/queries/"]
+    end
+
+    subgraph Backend ["⚙️ Backend — libros-service (puerto 8085)"]
+        CTRL["BibliotecaController\n@QueryMapping / @MutationMapping"]
+        SVC["BibliotecaService"]
+        REPO["Repositorios JPA\n(Autor / Libro / Categoria / Coleccion)"]
+    end
+
+    subgraph Persistencia ["🗄️ Persistencia"]
+        H2["Base de Datos H2\n(en memoria — librosdb)"]
+    end
+
+    subgraph Herramientas ["🛠️ Herramientas de desarrollo"]
+        GRAPHIQL["GraphiQL UI\nlocalhost:8085/graphiql"]
+        H2C["H2 Console\nlocalhost:8085/h2-console"]
+    end
+
+    UI --> AC
+    AC --> Q
+    Q -- "HTTP POST /graphql\n(JSON con query/mutation)" --> CTRL
+    CTRL --> SVC
+    SVC --> REPO
+    REPO -- "JPA / Hibernate" --> H2
+
+    GRAPHIQL -. "explora el schema" .-> CTRL
+    H2C -. "inspecciona tablas" .-> H2
+```
+
+### Flujo de una petición GraphQL
+
+```
+Browser (React)
+   │
+   │  POST http://localhost:8085/graphql
+   │  Content-Type: application/json
+   │  Body: { "query": "{ libros { id titulo } }" }
+   │
+   ▼
+Apollo Client  ──►  Spring GraphQL (DispatcherServlet)
+                         │
+                         ▼
+                   BibliotecaController   (@QueryMapping)
+                         │
+                         ▼
+                   BibliotecaService      (lógica de negocio)
+                         │
+                         ▼
+                   LibroRepository        (Spring Data JPA)
+                         │
+                         ▼
+                   H2 Database            (SQL generado por Hibernate)
+                         │
+                    ◄────┘
+                   JSON Response
+   ◄──────────────────────────────────
 ```
 
 ---
 
-## Modelo Entidad-Relación
+## 🛠️ Stack Tecnológico
 
-```mermaid
-erDiagram
-    AUTORES {
-        BIGINT id PK
-        VARCHAR nombre
-        VARCHAR nacionalidad
-    }
-    COLECCIONES {
-        BIGINT id PK
-        VARCHAR titulo
-        INT anio
-        BIGINT autor_id FK
-    }
-    LIBROS {
-        BIGINT id PK
-        VARCHAR titulo
-        INT paginas
-        INT anio
-        BIGINT autor_id FK
-        BIGINT coleccion_id FK
-    }
-    CATEGORIAS {
-        BIGINT id PK
-        VARCHAR nombre
-    }
-    LIBRO_CATEGORIA {
-        BIGINT libro_id FK
-        BIGINT categoria_id FK
-    }
+### Backend
 
-    AUTORES      ||--o{ COLECCIONES    : "publica"
-    AUTORES      ||--o{ LIBROS         : "escribe"
-    COLECCIONES  ||--o{ LIBROS         : "contiene"
-    LIBROS       }o--o{ CATEGORIAS     : "clasificado en"
+| Tecnología | Versión | Rol |
+|---|---|---|
+| Java | 21 | Lenguaje principal |
+| Spring Boot | 3.3.1 | Framework de aplicación |
+| Spring GraphQL | 1.3.x _(BOM de Boot)_ | Servidor GraphQL sobre HTTP |
+| graphql-java | 22.x _(BOM de Boot)_ | Motor de ejecución GraphQL |
+| Spring Data JPA | 3.3.1 | Abstracción de repositorios ORM |
+| Hibernate | 6.5.x _(BOM de Boot)_ | Implementación JPA / ORM |
+| H2 Database | 2.x _(BOM de Boot)_ | BD relacional en memoria |
+| Maven | 3.x | Gestor de dependencias y build |
+
+### Frontend
+
+| Tecnología | Versión | Rol |
+|---|---|---|
+| React | 18.2.0 | Librería de UI |
+| Vite | 5.1.3 | Bundler y servidor de desarrollo |
+| Apollo Client | 3.9.6 | Cliente GraphQL + caché reactiva |
+| graphql | 16.8.1 | Parser de documentos GraphQL |
+| React Router DOM | 6.22.1 | Enrutamiento SPA |
+| TailwindCSS | 3.4.1 | Framework CSS utility-first |
+| PostCSS / Autoprefixer | 8.4 / 10.4 | Procesamiento de CSS |
+| Node.js | 18+ | Runtime para herramientas frontend |
+
+---
+
+## 📂 Estructura del Proyecto
+
+```
+libros-poc/
+│
+├── libros-service/                          # Backend Spring Boot
+│   ├── pom.xml
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── src/
+│       └── main/
+│           ├── java/com/libros/
+│           │   ├── LibrosPocApplication.java        # Punto de entrada
+│           │   ├── DataInitializer.java             # Carga datos de prueba (15 libros)
+│           │   ├── config/
+│           │   │   └── CorsConfig.java              # CORS para localhost:3000
+│           │   ├── controller/
+│           │   │   └── BibliotecaController.java    # @QueryMapping / @MutationMapping
+│           │   ├── dto/
+│           │   │   ├── LibroInput.java              # Record para mutation agregarLibro
+│           │   │   ├── AutorInput.java              # Record para mutation agregarAutor
+│           │   │   └── ColeccionInput.java          # Record para mutation agregarColeccion
+│           │   ├── model/
+│           │   │   ├── Libro.java                   # Entidad JPA
+│           │   │   ├── Autor.java
+│           │   │   ├── Coleccion.java
+│           │   │   └── Categoria.java
+│           │   ├── repository/
+│           │   │   ├── LibroRepository.java         # Spring Data JPA
+│           │   │   ├── AutorRepository.java
+│           │   │   ├── ColeccionRepository.java
+│           │   │   └── CategoriaRepository.java
+│           │   └── service/
+│           │       └── BibliotecaService.java       # Lógica de negocio
+│           └── resources/
+│               ├── application.properties           # Configuración Spring Boot
+│               └── graphql/
+│                   └── schema.graphqls              # Definición del schema GraphQL
+│
+└── libros-ui/                               # Frontend React
+    ├── package.json
+    ├── vite.config.js
+    ├── tailwind.config.js
+    ├── postcss.config.js
+    ├── index.html
+    └── src/
+        ├── main.jsx                         # Punto de entrada: ApolloProvider + Router
+        ├── App.jsx                          # Definición de rutas
+        ├── index.css                        # Directivas Tailwind
+        ├── apollo/
+        │   └── client.js                    # Configuración Apollo Client → :8085/graphql
+        ├── queries/
+        │   ├── libros.js                    # GET_LIBROS, GET_LIBRO
+        │   ├── autores.js                   # GET_AUTORES, GET_AUTOR
+        │   ├── categorias.js                # GET_CATEGORIAS, GET_CATEGORIAS_CON_LIBROS
+        │   └── mutations.js                 # AGREGAR_LIBRO, ELIMINAR_LIBRO, …
+        ├── components/
+        │   ├── Navbar.jsx                   # Barra de navegación
+        │   ├── LoadingSpinner.jsx           # Estado de carga
+        │   └── ErrorMessage.jsx            # Visualización de errores
+        └── pages/
+            ├── Home.jsx                     # 📚 Catálogo de libros
+            ├── LibroDetalle.jsx             # 🔎 Búsqueda y detalle de libro
+            ├── AutorDetalle.jsx             # 👤 Búsqueda y detalle de autor
+            ├── FiltrarGenero.jsx            # 🏷️ Filtrar libros por género
+            └── AgregarLibro.jsx             # ➕ Formulario para agregar libro
 ```
 
 ---
 
-## Datos de Prueba
+## ✅ Requisitos Previos
 
-Al iniciar la aplicación, `DataInitializer` carga automáticamente:
+| Herramienta | Versión mínima | Verificar |
+|---|---|---|
+| Java JDK | 21 | `java -version` |
+| Maven | 3.8+ | `mvn -version` |
+| Node.js | 18+ | `node -v` |
+| npm | 9+ | `npm -v` |
 
-| Entidad     | Cantidad | Ejemplos                                                    |
-|-------------|----------|-------------------------------------------------------------|
-| Categorías  | 5        | Realismo Mágico, Fantasía, Terror, Romance, Aventura        |
-| Autores     | 5        | García Márquez, J.K. Rowling, Tolkien, Allende, Stephen King |
-| Colecciones | 5        | Harry Potter, El Señor de los Anillos, La Torre Oscura...   |
-| Libros      | 15       | 3 libros por autor                                          |
-
----
-
-## Endpoints
-
-| Endpoint          | Método | Descripción                              |
-|-------------------|--------|------------------------------------------|
-| `/graphql`        | POST   | Endpoint principal de la API GraphQL     |
-| `/graphiql`       | GET    | Playground interactivo GraphQL (UI)      |
-| `/h2-console`     | GET    | Consola web H2 (base de datos)           |
-
-**Puerto:** `8085`
+> **Nota:** No se requiere base de datos externa. H2 corre en memoria y se inicializa automáticamente con 15 libros de prueba al arrancar el backend.
 
 ---
 
-## Cómo Ejecutar
+## 🚀 Instalación y Ejecución
 
-### Con Maven
+### 1. Clonar el repositorio
 
 ```bash
-# Compilar y ejecutar
+git clone <url-del-repositorio>
+cd libros-poc
+```
+
+### 2. Levantar el Backend (libros-service)
+
+```bash
+cd libros-service
 mvn spring-boot:run
-
-# Ejecutar los tests
-mvn test
 ```
 
-La aplicación iniciará en `http://localhost:8085`
+Indicadores de inicio exitoso en consola:
 
-### Con Docker
-
-```bash
-# Construir la imagen
-docker build -t libros-poc .
-
-# Ejecutar el contenedor
-docker run -p 8085:8085 libros-poc
+```
+Started LibrosPocApplication in XX seconds
+✅ 15 libros cargados. GraphiQL: http://localhost:8085/graphiql
 ```
 
-### Con Docker Compose
+El backend estará disponible en `http://localhost:8085`.
+
+### 3. Levantar el Frontend (libros-ui)
+
+En una **nueva terminal**:
 
 ```bash
+cd libros-ui
+npm install        # solo la primera vez
+npm run dev
+```
+
+Salida esperada:
+
+```
+  VITE v5.x.x  ready in XXXX ms
+  ➜  Local:   http://localhost:3000/
+```
+
+### 4. (Alternativa) Docker Compose
+
+```bash
+cd libros-service
 docker-compose up --build
 ```
 
 ---
 
-## Ejemplos de Operaciones GraphQL
+## 🔗 URLs Importantes
 
-Abre **GraphiQL** en `http://localhost:8085/graphiql` y prueba las siguientes operaciones:
+| Recurso | URL | Descripción |
+|---|---|---|
+| **Frontend React** | http://localhost:3000 | Aplicación web completa |
+| **GraphiQL UI** | http://localhost:8085/graphiql | IDE interactivo para explorar el schema y ejecutar queries |
+| **Endpoint GraphQL** | http://localhost:8085/graphql | POST — usado por Apollo Client |
+| **H2 Console** | http://localhost:8085/h2-console | Consola web para inspeccionar la BD en memoria |
 
-### Queries
+> **H2 Console:** JDBC URL: `jdbc:h2:mem:librosdb` · Usuario: `sa` · Contraseña: _(vacía)_
 
-**Consultar todos los libros**
+---
+
+## 📖 Flujo Funcional de Ejemplo
+
+Todos los ejemplos se pueden ejecutar directamente en **GraphiQL** (`http://localhost:8085/graphiql`) o desde cualquier cliente HTTP con `POST http://localhost:8085/graphql`.
+
+---
+
+### Ejemplo 1 — Query: Obtener todos los libros
+
+**Request:**
 ```graphql
 query {
   libros {
     id
     titulo
-    paginas
     anio
     autor {
       nombre
-      nacionalidad
     }
-    coleccion {
+  }
+}
+```
+
+**Response JSON:**
+```json
+{
+  "data": {
+    "libros": [
+      {
+        "id": "1",
+        "titulo": "Cien Años de Soledad",
+        "anio": 1967,
+        "autor": { "nombre": "Gabriel García Márquez" }
+      },
+      {
+        "id": "2",
+        "titulo": "El Amor en los Tiempos del Cólera",
+        "anio": 1985,
+        "autor": { "nombre": "Gabriel García Márquez" }
+      },
+      {
+        "id": "4",
+        "titulo": "Harry Potter y la Piedra Filosofal",
+        "anio": 1997,
+        "autor": { "nombre": "J.K. Rowling" }
+      }
+    ]
+  }
+}
+```
+
+> 💡 **Ventaja GraphQL:** el cliente pide exactamente `id`, `titulo`, `anio` y `autor.nombre`. El servidor no devuelve `paginas`, `coleccion` ni `categorias`, que no fueron solicitados.
+
+---
+
+### Ejemplo 2 — Query anidada: Autor con sus libros y colecciones
+
+**Request:**
+```graphql
+query {
+  autor(id: "3") {
+    nombre
+    nacionalidad
+    colecciones {
       titulo
+      anio
+    }
+    libros {
+      titulo
+      paginas
+      anio
+      categorias {
+        nombre
+      }
+    }
+  }
+}
+```
+
+**Response JSON:**
+```json
+{
+  "data": {
+    "autor": {
+      "nombre": "J.R.R. Tolkien",
+      "nacionalidad": "Sudafricana",
+      "colecciones": [
+        { "titulo": "El Señor de los Anillos", "anio": 1954 }
+      ],
+      "libros": [
+        {
+          "titulo": "El Hobbit",
+          "paginas": 310,
+          "anio": 1937,
+          "categorias": [
+            { "nombre": "Fantasía" },
+            { "nombre": "Aventura" }
+          ]
+        },
+        {
+          "titulo": "La Comunidad del Anillo",
+          "paginas": 479,
+          "anio": 1954,
+          "categorias": [
+            { "nombre": "Fantasía" },
+            { "nombre": "Aventura" }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+> 💡 **Ventaja GraphQL:** una sola petición resuelve tres niveles de relación (`autor → colecciones`, `autor → libros → categorias`). En REST equivaldría a 3 llamadas: `GET /autores/3`, `GET /autores/3/libros`, `GET /libros/{id}/categorias`.
+
+---
+
+### Ejemplo 3 — Filtrar: Libros de un género específico
+
+**Request:**
+```graphql
+query {
+  categorias {
+    id
+    nombre
+    libros {
+      titulo
+      anio
+      autor {
+        nombre
+      }
+    }
+  }
+}
+```
+
+**Response JSON (fragmento — categoría "Fantasía"):**
+```json
+{
+  "data": {
+    "categorias": [
+      {
+        "id": "2",
+        "nombre": "Fantasía",
+        "libros": [
+          {
+            "titulo": "Harry Potter y la Piedra Filosofal",
+            "anio": 1997,
+            "autor": { "nombre": "J.K. Rowling" }
+          },
+          {
+            "titulo": "El Hobbit",
+            "anio": 1937,
+            "autor": { "nombre": "J.R.R. Tolkien" }
+          },
+          {
+            "titulo": "La Comunidad del Anillo",
+            "anio": 1954,
+            "autor": { "nombre": "J.R.R. Tolkien" }
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Ejemplo 4 — Mutation: Agregar un nuevo libro
+
+**Request:**
+```graphql
+mutation {
+  agregarLibro(input: {
+    titulo: "El nombre del viento"
+    paginas: 662
+    anio: 2007
+    autorId: "1"
+    categoriaIds: ["2", "5"]
+  }) {
+    id
+    titulo
+    anio
+    autor {
+      nombre
     }
     categorias {
       nombre
@@ -202,773 +442,121 @@ query {
 }
 ```
 
-**Buscar un libro por ID**
+**Response JSON:**
+```json
+{
+  "data": {
+    "agregarLibro": {
+      "id": "16",
+      "titulo": "El nombre del viento",
+      "anio": 2007,
+      "autor": {
+        "nombre": "Gabriel García Márquez"
+      },
+      "categorias": [
+        { "nombre": "Fantasía" },
+        { "nombre": "Aventura" }
+      ]
+    }
+  }
+}
+```
+
+> 💡 **Ventaja GraphQL:** la mutation devuelve exactamente los campos del objeto creado que el cliente necesita, sin necesidad de hacer un `GET` adicional para obtener el recurso recién creado (como ocurre en REST con el patrón `POST → 201 Created → Location header → GET`).
+
+---
+
+## ⚡ GraphQL vs REST — Ventajas en este proyecto
+
+### 1. Un solo endpoint
+
+| REST | GraphQL |
+|---|---|
+| `GET /libros` | `POST /graphql` |
+| `GET /libros/{id}` | (mismo endpoint) |
+| `GET /autores/{id}` | (mismo endpoint) |
+| `GET /categorias` | (mismo endpoint) |
+| `POST /libros` | (mismo endpoint) |
+
+GraphQL centraliza todas las operaciones en `POST /graphql`. El **schema** funciona como contrato único y auto-documentado.
+
+---
+
+### 2. Elimina el over-fetching
+
+En la pantalla **Inicio** solo se necesitan `titulo`, `anio` y `autor.nombre`. Con REST, `GET /libros` devolvería `paginas`, `coleccion`, `categorias` y todos los campos del autor — datos que la pantalla no usa.
+
 ```graphql
+# Solo pedimos lo que la pantalla necesita
 query {
-  libro(id: 1) {
-    titulo
-    paginas
-    anio
-    autor { nombre }
-    categorias { nombre }
+  libros {
+    titulo   # ✅ necesario
+    anio     # ✅ necesario
+    autor { nombre }  # ✅ necesario
+    # paginas     ← no se pide, no se transfiere
+    # coleccion   ← no se pide, no se transfiere
+    # categorias  ← no se pide, no se transfiere
   }
 }
 ```
 
-**Consultar todos los autores con sus libros**
-```graphql
-query {
-  autores {
-    id
-    nombre
-    nacionalidad
-    libros {
-      titulo
-      paginas
-    }
-    colecciones {
-      titulo
-      anio
-    }
-  }
-}
-```
-
-**Consultar todas las colecciones**
-```graphql
-query {
-  colecciones {
-    id
-    titulo
-    anio
-    autor { nombre }
-    libros { titulo }
-  }
-}
-```
-
-**Consultar categorías con sus libros**
-```graphql
-query {
-  categorias {
-    nombre
-    libros {
-      titulo
-      anio
-    }
-  }
-}
-```
-
-### Mutations
-
-**Agregar un nuevo libro**
-```graphql
-mutation {
-  agregarLibro(input: {
-    titulo: "El Otoño del Patriarca"
-    paginas: 317
-    anio: 1975
-    autorId: "1"
-    coleccionId: "1"
-    categoriaIds: ["1"]
-  }) {
-    id
-    titulo
-    paginas
-    anio
-    autor { nombre }
-    coleccion { titulo }
-    categorias { nombre }
-  }
-}
-```
-
-**Agregar un nuevo autor**
-```graphql
-mutation {
-  agregarAutor(input: {
-    nombre: "Jorge Luis Borges"
-    nacionalidad: "Argentina"
-  }) {
-    id
-    nombre
-    nacionalidad
-  }
-}
-```
-
-**Agregar una nueva colección**
-```graphql
-mutation {
-  agregarColeccion(input: {
-    titulo: "Ficciones"
-    anio: 1944
-    autorId: "6"
-  }) {
-    id
-    titulo
-    anio
-    autor { nombre }
-  }
-}
-```
-
-**Eliminar un libro**
-```graphql
-mutation {
-  eliminarLibro(id: 1)
-}
-```
-
 ---
 
-## Estructura del Proyecto
+### 3. Elimina el under-fetching (N+1 de red)
+
+La pantalla **Detalle de Autor** necesita: datos del autor + sus libros + sus colecciones. Con REST serían **3 peticiones HTTP**:
 
 ```
-src/
-├── main/
-│   ├── java/com/canciones/
-│   │   ├── LibrosPocApplication.java       ← Clase principal (@SpringBootApplication)
-│   │   ├── DataInitializer.java            ← Carga datos al iniciar
-│   │   ├── model/
-│   │   │   ├── Libro.java                  ← Entidad JPA Libro
-│   │   │   ├── Autor.java                  ← Entidad JPA Autor
-│   │   │   ├── Coleccion.java              ← Entidad JPA Colección/Saga
-│   │   │   └── Categoria.java             ← Entidad JPA Categoría
-│   │   ├── repository/
-│   │   │   ├── LibroRepository.java        ← Spring Data JPA
-│   │   │   ├── AutorRepository.java
-│   │   │   ├── ColeccionRepository.java
-│   │   │   └── CategoriaRepository.java
-│   │   ├── dto/
-│   │   │   ├── LibroInput.java             ← Java 21 Record
-│   │   │   ├── AutorInput.java
-│   │   │   └── ColeccionInput.java
-│   │   ├── service/
-│   │   │   └── BibliotecaService.java      ← Lógica de negocio
-│   │   └── controller/
-│   │       └── BibliotecaController.java   ← Resolvers GraphQL
-│   └── resources/
-│       ├── graphql/
-│       │   └── schema.graphqls             ← Schema GraphQL
-│       └── application.properties          ← Configuración
-├── Dockerfile
-└── docker-compose.yml
-```
-
----
-
-## Acceso a la Consola H2
-
-1. Abre `http://localhost:8085/h2-console`
-2. Usa los siguientes datos de conexión:
-   - **JDBC URL:** `jdbc:h2:mem:librosdb`
-   - **Usuario:** `sa`
-   - **Contraseña:** *(vacía)*
-
----
-
-## Diagrama de Flujo — Query `libros`
-
-```mermaid
-sequenceDiagram
-    participant C as Cliente
-    participant GQL as Spring GraphQL
-    participant CTRL as BibliotecaController
-    participant SVC as BibliotecaService
-    participant REPO as LibroRepository
-    participant DB as H2 Database
-
-    C->>GQL: POST /graphql { query { libros { ... } } }
-    GQL->>CTRL: libros()
-    CTRL->>SVC: obtenerLibros()
-    SVC->>REPO: findAll()
-    REPO->>DB: SELECT * FROM libros
-    DB-->>REPO: List<Libro>
-    REPO-->>SVC: List<Libro>
-    SVC-->>CTRL: List<Libro>
-    CTRL-->>GQL: List<Libro>
-    GQL-->>C: JSON { data: { libros: [...] } }
-```
-
-
----
-
-## Stack Tecnológico
-
-| Tecnología         | Versión  | Rol                                          |
-|--------------------|----------|----------------------------------------------|
-| **Java**           | 21       | Lenguaje (Records, Pattern Matching)         |
-| **Spring Boot**    | 3.3.x    | Framework principal y auto-configuración     |
-| **Spring GraphQL** | 1.3.x    | Exposición de la API GraphQL vía HTTP        |
-| **Spring Data JPA**| 3.x      | Abstracción del acceso a datos               |
-| **Hibernate**      | 6.x      | ORM — implementación JPA                     |
-| **H2 Database**    | 2.x      | Base de datos relacional en memoria          |
-| **Maven**          | 3.x      | Gestor de dependencias y build               |
-
----
-
-## Arquitectura de Capas
-
-```
-┌───────────────────────────────────────────────────┐
-│         Cliente (Navegador / GraphiQL / curl)      │
-└──────────────────────┬────────────────────────────┘
-                       │  HTTP POST /graphql
-                       ▼
-┌───────────────────────────────────────────────────┐
-│              Capa de Presentación                  │
-│         CatalogController  (@Controller)           │
-│    @QueryMapping   →  resuelve consultas           │
-│    @MutationMapping → resuelve mutaciones          │
-│    @Argument        → binding de argumentos        │
-└──────────────────────┬────────────────────────────┘
-                       │
-                       ▼
-┌───────────────────────────────────────────────────┐
-│              Capa de Servicio                      │
-│           CatalogService  (@Service)               │
-│    Lógica de negocio + @Transactional              │
-│    Valida entidades, arma el grafo de objetos      │
-└──────────────────────┬────────────────────────────┘
-                       │
-                       ▼
-┌───────────────────────────────────────────────────┐
-│            Capa de Repositorio                     │
-│   ArtistRepository  AlbumRepository               │
-│   SongRepository    GenreRepository               │
-│        (extienden JpaRepository<T, Long>)          │
-└──────────────────────┬────────────────────────────┘
-                       │  SQL generado por Hibernate
-                       ▼
-┌───────────────────────────────────────────────────┐
-│          Base de Datos H2 (en memoria)             │
-│   artistas │ albumes │ canciones │ generos         │
-│                cancion_genero (join)               │
-└───────────────────────────────────────────────────┘
-```
-
----
-
-## Diagrama de Componentes
-
-```mermaid
-graph TB
-    subgraph Cliente
-        C[GraphiQL / curl / App]
-    end
-
-    subgraph "API Layer"
-        CC["CatalogController\n@Controller\n@QueryMapping @MutationMapping"]
-        DI["DataInitializer\n@Component\nApplicationRunner"]
-    end
-
-    subgraph "Service Layer"
-        CS["CatalogService\n@Service @Transactional"]
-    end
-
-    subgraph "Repository Layer"
-        SR[SongRepository]
-        AR[ArtistRepository]
-        ALR[AlbumRepository]
-        GR[GenreRepository]
-    end
-
-    subgraph "Domain Model"
-        S[Song]
-        A[Artist]
-        AL[Album]
-        G[Genre]
-    end
-
-    subgraph "Infrastructure"
-        H2[(H2 In-Memory DB)]
-        SCH["schema.graphqls\nGraphQL Schema"]
-    end
-
-    C -->|"POST /graphql"| CC
-    CC -->|"delega"| CS
-    CC -.->|"mapeado por"| SCH
-    CS --> SR & AR & ALR & GR
-    SR & AR & ALR & GR -->|JPA / Hibernate| H2
-    SR --> S
-    AR --> A
-    ALR --> AL
-    GR --> G
-    DI -->|"carga inicial"| SR & AR & ALR & GR
-```
-
----
-
-## Modelo de Dominio y Relaciones JPA
-
-```mermaid
-erDiagram
-    ARTISTAS {
-        Long id PK
-        String nombre
-        String nacionalidad
-    }
-    ALBUMES {
-        Long id PK
-        String titulo
-        int anio
-        Long artista_id FK
-    }
-    CANCIONES {
-        Long id PK
-        String titulo
-        int duracion
-        int anio
-        Long artista_id FK
-        Long album_id FK
-    }
-    GENEROS {
-        Long id PK
-        String nombre
-    }
-    CANCION_GENERO {
-        Long cancion_id FK
-        Long genero_id FK
-    }
-
-    ARTISTAS ||--o{ ALBUMES      : "publica"
-    ARTISTAS ||--o{ CANCIONES    : "interpreta"
-    ALBUMES  ||--o{ CANCIONES    : "contiene"
-    CANCIONES }o--o{ GENEROS     : "pertenece a"
-    CANCIONES ||--o{ CANCION_GENERO : ""
-    GENEROS  ||--o{ CANCION_GENERO  : ""
-```
-
----
-
-## Diagrama de Secuencia — Query `canciones`
-
-```mermaid
-sequenceDiagram
-    actor C as Cliente
-    participant G as GraphiQL
-    participant GQL as POST /graphql
-    participant Ctrl as CatalogController
-    participant Svc as CatalogService
-    participant Repo as SongRepository
-    participant DB as H2 Database
-
-    C->>G: Escribe la query y presiona Run
-    G->>GQL: POST /graphql<br/>{ "query": "{ canciones { id titulo artista { nombre } } }" }
-    GQL->>Ctrl: canciones()
-    Ctrl->>Svc: obtenerCanciones()
-    Svc->>Repo: findAll()
-    Repo->>DB: SELECT * FROM canciones
-    DB-->>Repo: ResultSet (15 filas)
-    Repo-->>Svc: List<Song>
-    Svc-->>Ctrl: List<Song>
-    Note over Ctrl,DB: Spring resuelve los campos lazy:<br/>getArtista() → SELECT artista<br/>getAlbum()   → SELECT album<br/>getGeneros() → SELECT generos
-    GQL-->>G: { "data": { "canciones": [...] } }
-    G-->>C: Muestra el resultado JSON
-```
-
----
-
-## Diagrama de Secuencia — Mutation `agregarCancion`
-
-```mermaid
-sequenceDiagram
-    actor C as Cliente
-    participant GQL as POST /graphql
-    participant Ctrl as CatalogController
-    participant Svc as CatalogService
-    participant DB as H2 Database
-
-    C->>GQL: POST /graphql<br/>mutation { agregarCancion(input: {...}) { id titulo } }
-    GQL->>Ctrl: agregarCancion(CancionInput input)
-    Note over Ctrl: Spring GraphQL bindea<br/>el argumento "input"<br/>al Record CancionInput
-    Ctrl->>Svc: agregarCancion(input)
-    Svc->>DB: SELECT * FROM artistas WHERE id = ?
-    DB-->>Svc: Artist
-    Svc->>DB: SELECT * FROM albumes WHERE id = ?
-    DB-->>Svc: Album
-    Svc->>DB: SELECT * FROM generos WHERE id IN (...)
-    DB-->>Svc: List<Genre>
-    Svc->>DB: INSERT INTO canciones (titulo, duracion, anio, artista_id, album_id)
-    Svc->>DB: INSERT INTO cancion_genero (cancion_id, genero_id) x N
-    DB-->>Svc: Song (con ID generado)
-    Svc-->>Ctrl: Song
-    Ctrl-->>GQL: Song
-    GQL-->>C: { "data": { "agregarCancion": { "id": "16", "titulo": "..." } } }
-```
-
----
-
-## Endpoints Expuestos
-
-| Endpoint              | Método | Descripción                                        |
-|-----------------------|--------|----------------------------------------------------|
-| `/graphql`            | POST   | Endpoint principal de la API GraphQL               |
-| `/graphiql`           | GET    | UI interactiva para explorar y probar la API       |
-| `/h2-console`         | GET    | Consola web de la base de datos H2                 |
-
----
-
-## Flujo Básico de Ejemplo
-
-Escenario: consultar las canciones de Queen con sus géneros.
-
-```
-1. El cliente envía POST /graphql con la query
-2. Spring GraphQL enruta la operación al método canciones() del CatalogController
-3. El controlador delega en CatalogService.obtenerCanciones()
-4. El servicio llama a SongRepository.findAll() (transacción de solo lectura)
-5. Hibernate genera: SELECT * FROM canciones
-6. Spring GraphQL resuelve cada campo del resultado:
-   - song.getTitulo()   → "Bohemian Rhapsody"
-   - song.getArtista()  → lazy load → SELECT * FROM artistas WHERE id = 3
-   - song.getGeneros()  → lazy load → SELECT generos JOIN cancion_genero ...
-7. El resultado se serializa a JSON y se retorna al cliente
-```
-
----
-
-## Cómo Ejecutar el Proyecto
-
-### Prerequisitos
-
-- **Java 21** o superior instalado
-- **Maven 3.8+** instalado (o usar el Maven Wrapper si se agrega)
-
-### Pasos
-
-```bash
-# 1. Clonar o abrir el proyecto
-cd canciones-poc
-
-# 2. Compilar el proyecto
-mvn clean compile
-
-# 3. Ejecutar la aplicación
-mvn spring-boot:run
-```
-
-La aplicación estará disponible en `http://localhost:8085`.
-
-### Acceso a las herramientas
-
-| Herramienta  | URL                                      | Notas                              |
-|--------------|------------------------------------------|------------------------------------|
-| GraphiQL UI  | http://localhost:8085/graphiql           | Explorador interactivo de GraphQL  |
-| H2 Console   | http://localhost:8085/h2-console         | Ver tablas y ejecutar SQL          |
-| API GraphQL  | http://localhost:8085/graphql (POST)     | Endpoint directo para clientes     |
-
-**Configuración de la consola H2:**
-- JDBC URL: `jdbc:h2:mem:cancionesdb`
-- Usuario: `sa`
-- Contraseña: *(vacía)*
-
-### Con Docker
-
-```bash
-# Construir la imagen y levantar el contenedor en el puerto 8085
-docker compose up --build
-
-# Correr en segundo plano
-docker compose up --build -d
-
-# Detener
-docker compose down
-```
-
-O directamente con Docker:
-
-```bash
-# Construir la imagen
-docker build -t canciones-poc .
-
-# Levantar el contenedor en el puerto 8085
-docker run -p 8085:8085 --name canciones-poc canciones-poc
-```
-
-La aplicación estará disponible en `http://localhost:8085` en ambos casos.
-
----
-
-## Ejemplos de Queries y Mutations para GraphiQL
-
-### QUERIES — Consultas
-
-#### 1. Obtener todas las canciones con artista y géneros
-```graphql
-query TodasLasCanciones {
-  canciones {
-    id
-    titulo
-    duracion
-    anio
-    artista {
+REST:
+  GET /autores/3           → datos del autor
+  GET /autores/3/libros    → libros del autor
+  GET /autores/3/colecciones → colecciones del autor
+
+GraphQL:
+  POST /graphql  (1 sola petición)
+  {
+    autor(id: "3") {
       nombre
-      nacionalidad
-    }
-    album {
-      titulo
-    }
-    generos {
-      nombre
+      libros { titulo anio }
+      colecciones { titulo anio }
     }
   }
-}
 ```
 
-#### 2. Obtener una canción por ID
-```graphql
-query CancionPorId {
-  cancion(id: "1") {
-    id
-    titulo
-    duracion
-    anio
-    artista {
-      nombre
-    }
-    generos {
-      nombre
-    }
-  }
-}
-```
+---
 
-#### 3. Obtener todos los artistas con sus álbumes y canciones
-```graphql
-query TodosLosArtistas {
-  artistas {
-    id
-    nombre
-    nacionalidad
-    albumes {
-      titulo
-      anio
-    }
-    canciones {
-      titulo
-      duracion
-    }
-  }
-}
-```
+### 4. Schema como contrato tipado
 
-#### 4. Obtener un artista específico por ID
-```graphql
-query ArtistaPorId {
-  artista(id: "3") {
-    nombre
-    nacionalidad
-    canciones {
-      titulo
-      duracion
-      generos {
-        nombre
-      }
-    }
-  }
-}
-```
+El archivo `schema.graphqls` define el contrato completo del API. Cualquier cliente puede inspeccionar qué queries, mutations y tipos están disponibles mediante **introspección** de GraphQL — sin necesidad de documentación externa (Swagger/OpenAPI).
 
-#### 5. Obtener todos los álbumes con sus canciones
 ```graphql
-query TodosLosAlbumes {
-  albumes {
-    id
-    titulo
-    anio
-    artista {
-      nombre
-    }
-    canciones {
-      titulo
-    }
-  }
-}
-```
-
-#### 6. Obtener un álbum específico
-```graphql
-query AlbumPorId {
-  album(id: "2") {
-    titulo
-    anio
-    artista {
-      nombre
-    }
-    canciones {
-      titulo
-      duracion
-    }
-  }
-}
-```
-
-#### 7. Obtener todos los géneros con sus canciones
-```graphql
-query TodosLosGeneros {
-  generos {
-    id
-    nombre
-    canciones {
-      titulo
-      artista {
-        nombre
-      }
-    }
-  }
+# El schema es la documentación viva del API
+type Libro {
+  id: ID!
+  titulo: String!
+  paginas: Int!
+  anio: Int!
+  autor: Autor!           # relación resuelta por el servidor
+  coleccion: Coleccion    # nullable — no todos los libros pertenecen a una saga
+  categorias: [Categoria!]!
 }
 ```
 
 ---
 
-### MUTATIONS — Modificaciones
+### 5. Evolución sin versionado
 
-#### 8. Agregar un nuevo artista
-```graphql
-mutation AgregarArtista {
-  agregarArtista(input: {
-    nombre: "Coldplay"
-    nacionalidad: "Británica"
-  }) {
-    id
-    nombre
-    nacionalidad
-  }
-}
-```
-
-#### 9. Agregar un nuevo álbum (usa el ID del artista creado en el paso anterior)
-```graphql
-mutation AgregarAlbum {
-  agregarAlbum(input: {
-    titulo: "A Head Full of Dreams"
-    anio: 2015
-    artistaId: "6"
-  }) {
-    id
-    titulo
-    anio
-    artista {
-      nombre
-    }
-  }
-}
-```
-
-#### 10. Agregar una nueva canción
-```graphql
-mutation AgregarCancion {
-  agregarCancion(input: {
-    titulo: "Adventure of a Lifetime"
-    duracion: 245
-    anio: 2015
-    artistaId: "6"
-    albumId: "6"
-    generoIds: ["2"]
-  }) {
-    id
-    titulo
-    duracion
-    anio
-    artista {
-      nombre
-    }
-    album {
-      titulo
-    }
-    generos {
-      nombre
-    }
-  }
-}
-```
-
-#### 11. Agregar una canción sin álbum y sin géneros (campos opcionales)
-```graphql
-mutation AgregarCancionMinima {
-  agregarCancion(input: {
-    titulo: "Canción de Prueba"
-    duracion: 180
-    anio: 2024
-    artistaId: "1"
-  }) {
-    id
-    titulo
-    artista {
-      nombre
-    }
-  }
-}
-```
-
-#### 12. Eliminar una canción por ID
-```graphql
-mutation EliminarCancion {
-  eliminarCancion(id: "1")
-}
-```
+Con REST, agregar un campo nuevo puede romper clientes. Con GraphQL, los campos nuevos se añaden al schema sin afectar a clientes existentes — estos simplemente no los piden hasta que lo necesiten.
 
 ---
 
-## Estructura del Proyecto
+## 🗃️ Datos de Prueba Iniciales
 
-```
-canciones-poc/
-├── pom.xml                                          # Dependencias Maven
-├── Dockerfile                                       # Build multi-etapa, JRE Alpine, puerto 8085
-├── docker-compose.yml                               # Levanta el servicio en puerto 8085
-├── README.md                                        # Este archivo
-└── src/
-    └── main/
-        ├── java/com/canciones/
-        │   ├── CancionesPocApplication.java         # Punto de entrada Spring Boot
-        │   ├── DataInitializer.java                 # Carga datos de prueba al inicio
-        │   ├── controller/
-        │   │   └── CatalogController.java           # Resolvers GraphQL (@QueryMapping / @MutationMapping)
-        │   ├── service/
-        │   │   └── CatalogService.java              # Lógica de negocio (@Transactional)
-        │   ├── repository/
-        │   │   ├── ArtistRepository.java            # Repositorio JPA para Artist
-        │   │   ├── AlbumRepository.java             # Repositorio JPA para Album
-        │   │   ├── SongRepository.java              # Repositorio JPA para Song
-        │   │   └── GenreRepository.java             # Repositorio JPA para Genre
-        │   ├── model/
-        │   │   ├── Artist.java                      # Entidad: Artista (@ManyToOne, @OneToMany)
-        │   │   ├── Album.java                       # Entidad: Álbum (@ManyToOne, @OneToMany)
-        │   │   ├── Song.java                        # Entidad: Canción (@ManyToOne, @ManyToMany)
-        │   │   └── Genre.java                       # Entidad: Género (@ManyToMany inverso)
-        │   └── dto/
-        │       ├── CancionInput.java                # Record Java 21: input para crear canción
-        │       ├── ArtistaInput.java                # Record Java 21: input para crear artista
-        │       └── AlbumInput.java                  # Record Java 21: input para crear álbum
-        └── resources/
-            ├── application.properties               # Configuración de H2, JPA y GraphQL
-            └── graphql/
-                └── schema.graphqls                  # Schema GraphQL (tipos, queries, mutations, inputs)
-```
+Al arrancar el backend se cargan automáticamente:
 
----
-
-## Notas de Diseño
-
-### Uso de Java Records para Input Types
-Los DTOs de entrada (`CancionInput`, `ArtistaInput`, `AlbumInput`) son Records de Java 21. Esto garantiza:
-- **Inmutabilidad**: los campos son `final` implícitamente.
-- **Concisión**: sin boilerplate de constructores/getters.
-- **Binding automático**: Spring GraphQL (vía `@Argument`) instancia los Records usando su constructor canónico, mapeando los campos del Input Type GraphQL a los componentes del Record.
-
-### Lazy Loading con Open-in-View
-La propiedad `spring.jpa.open-in-view=true` mantiene la sesión JPA activa durante todo el ciclo de vida del request HTTP. Esto permite que el motor de ejecución GraphQL resuelva las relaciones lazy (`@OneToMany`, `@ManyToMany`) de forma transparente cuando construye la respuesta.
-
-### Datos de Prueba Precargados
-Al iniciar la aplicación, `DataInitializer` carga automáticamente:
-
-| Entidad   | Cantidad | Ejemplos                                      |
-|-----------|----------|-----------------------------------------------|
-| Géneros   | 5        | Rock Clásico, Pop, R&B/Soul, Reggae, Pop Latino |
-| Artistas  | 5        | The Beatles, Michael Jackson, Queen, Bob Marley, Shakira |
-| Álbumes   | 5        | Abbey Road, Thriller, A Night at the Opera, Legend, Laundry Service |
-| Canciones | 15       | Come Together, Billie Jean, Bohemian Rhapsody... |
+| Entidad | Cantidad | Ejemplos |
+|---|---|---|
+| Categorías | 5 | Realismo Mágico, Fantasía, Terror, Romance, Aventura |
+| Autores | 5 | García Márquez, J.K. Rowling, Tolkien, Isabel Allende, Stephen King |
+| Colecciones | 5 | Ciclo de Macondo, Harry Potter, El Señor de los Anillos, La Torre Oscura |
+| Libros | 15 | Distribuidos entre los 5 autores con sus categorías asignadas |
