@@ -13,6 +13,7 @@
   - [Ejemplo 2 — Query anidada: Autor con libros](#ejemplo-2--query-anidada-autor-con-sus-libros-y-colecciones)
   - [Ejemplo 3 — Filtrar por género](#ejemplo-3--filtrar-libros-de-un-género-específico)
   - [Ejemplo 4 — Mutation: Agregar libro](#ejemplo-4--mutation-agregar-un-nuevo-libro)
+- [🧩 GraphQL — Definición y Características](#-graphql--definición-y-características)
 - [⚡ GraphQL vs REST](#-graphql-vs-rest--ventajas-en-este-proyecto)
 - [🗃️ Datos de Prueba Iniciales](#️-datos-de-prueba-iniciales)
 
@@ -481,6 +482,108 @@ mutation {
 ```
 
 > 💡 **Ventaja GraphQL:** la mutation devuelve exactamente los campos del objeto creado que el cliente necesita, sin necesidad de hacer un `GET` adicional para obtener el recurso recién creado (como ocurre en REST con el patrón `POST → 201 Created → Location header → GET`).
+
+---
+
+## 🧩 GraphQL — Definición y Características
+
+### ¿Qué es GraphQL?
+
+**GraphQL** es un lenguaje de consulta para APIs y un entorno de ejecución para resolver esas consultas, desarrollado por Facebook en 2012 y liberado como open source en 2015. A diferencia de REST, GraphQL no expone múltiples endpoints fijos — expone **un único endpoint** a través del cual el cliente describe exactamente qué datos necesita.
+
+> _"GraphQL is a query language for your API, and a server-side runtime for executing queries using a type system you define for your data."_
+> — graphql.org
+
+---
+
+### Características Principales
+
+#### 1. Schema fuertemente tipado
+Todo el API se describe mediante un **schema** con tipos definidos. El schema es el contrato entre cliente y servidor — cualquier cliente puede inspeccionarlo mediante introspección sin necesidad de documentación externa.
+
+```graphql
+type Libro {
+  id: ID!
+  titulo: String!       # String no nulo
+  paginas: Int!
+  anio: Int!
+  autor: Autor!         # relación tipada
+  categorias: [Categoria!]!  # lista tipada
+}
+```
+
+#### 2. El cliente controla la forma de los datos
+El cliente pide exactamente los campos que necesita — ni más, ni menos. El servidor resuelve solo lo solicitado.
+
+```graphql
+# El cliente decide qué campos quiere
+query {
+  libro(id: "1") {
+    titulo      # ✅ necesito esto
+    anio        # ✅ necesito esto
+    # paginas   ← no lo pido, no viaja en la red
+  }
+}
+```
+
+#### 3. Resolución de relaciones en una sola petición
+GraphQL puede resolver múltiples niveles de relaciones en **una única llamada HTTP**, eliminando el problema de under-fetching (múltiples roundtrips) típico de REST.
+
+```graphql
+query {
+  autor(id: "1") {
+    nombre
+    libros {           # relación 1→N resuelta en la misma petición
+      titulo
+      categorias {     # relación N→M resuelta en la misma petición
+        nombre
+      }
+    }
+  }
+}
+```
+
+#### 4. Operaciones: Query, Mutation y Subscription
+
+| Operación | Descripción | Analogía REST |
+|---|---|---|
+| `query` | Lectura de datos | `GET` |
+| `mutation` | Escritura / modificación | `POST`, `PUT`, `DELETE` |
+| `subscription` | Flujo de datos en tiempo real (WebSocket) | Server-Sent Events |
+
+#### 5. Introspección del schema
+Cualquier cliente puede consultar el propio schema del API en tiempo de ejecución:
+
+```graphql
+query {
+  __schema {
+    types {
+      name
+      fields {
+        name
+        type { name }
+      }
+    }
+  }
+}
+```
+Esto alimenta herramientas como **GraphiQL**, que genera autocompletado y documentación automática a partir del schema.
+
+#### 6. Evolución sin versionado
+Con REST, un cambio en la respuesta puede romper clientes existentes y obliga a versionar el API (`/v1`, `/v2`). Con GraphQL los campos nuevos se agregan al schema sin afectar a los clientes que no los soliciten — el API evoluciona de forma **retrocompatible** por diseño.
+
+---
+
+### Cuándo usar GraphQL
+
+| Escenario | ¿GraphQL es una buena opción? |
+|---|---|
+| Múltiples clientes con necesidades distintas (web, móvil, TV) | ✅ Ideal — cada cliente pide solo lo que necesita |
+| Datos con muchas relaciones entre entidades | ✅ Ideal — resuelve grafos de datos en una sola query |
+| APIs de lectura intensiva con campos variables | ✅ Muy recomendado |
+| API pública simple con pocos recursos y respuestas estables | ⚠️ REST puede ser suficiente |
+| Transferencia de archivos binarios (imágenes, PDFs) | ❌ Usar REST o presigned URLs |
+| Operaciones de streaming masivo | ⚠️ Evaluar según caso |
 
 ---
 
