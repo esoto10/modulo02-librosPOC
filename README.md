@@ -1,5 +1,23 @@
 # 📚 Libros POC — Catálogo de Libros con GraphQL
 
+## 📑 Índice
+
+- [🏛️ Diagrama de Arquitectura](#️-diagrama-de-arquitectura)
+- [🛠️ Stack Tecnológico](#️-stack-tecnológico)
+- [📂 Estructura del Proyecto](#-estructura-del-proyecto)
+- [✅ Requisitos Previos](#-requisitos-previos)
+- [🚀 Instalación y Ejecución](#-instalación-y-ejecución)
+- [🔗 URLs Importantes](#-urls-importantes)
+- [📖 Flujo Funcional de Ejemplo](#-flujo-funcional-de-ejemplo)
+  - [Ejemplo 1 — Todos los libros](#ejemplo-1--query-obtener-todos-los-libros)
+  - [Ejemplo 2 — Query anidada: Autor con libros](#ejemplo-2--query-anidada-autor-con-sus-libros-y-colecciones)
+  - [Ejemplo 3 — Filtrar por género](#ejemplo-3--filtrar-libros-de-un-género-específico)
+  - [Ejemplo 4 — Mutation: Agregar libro](#ejemplo-4--mutation-agregar-un-nuevo-libro)
+- [⚡ GraphQL vs REST](#-graphql-vs-rest--ventajas-en-este-proyecto)
+- [🗃️ Datos de Prueba Iniciales](#️-datos-de-prueba-iniciales)
+
+---
+
 POC (**Proof of Concept**) que demuestra una arquitectura fullstack moderna basada en **GraphQL** como contrato de comunicación entre capas. El sistema implementa un catálogo bibliográfico con operaciones de consulta y mutación, cubriendo las ventajas clave de GraphQL frente a REST en un caso de uso real.
 
 ---
